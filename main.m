@@ -6,7 +6,7 @@
 
 function main(null)
 try
-    datRaw=load('D:\Graduate Work\UoP_Fall2019\ECPE226\03_NumRecognition2\usps_modified.mat');
+    datRaw=load('~\03_NumRecognition2\usps_modified.mat');
 catch
     warning("File failed to load. Opening File Explorer");
     datRaw=uigetfile('*.mat'); end
@@ -24,16 +24,13 @@ Iota=[x(:,1),x(:,2),x(:,1).^2,x(:,1).*x(:,2),x(:,2).^2,x(:,1).^3,...
     x(:,1).^2.*x(:,2),x(:,1).*x(:,2).^2,x(:,2).^3];
 N=length(x);
 
-% figure(1);
-% hold on
-% title('Classification of Digits');
-% for n =1:size(x,1)
-%     if (y(n)==1), scatter(x(n,1),x(n,2),'ro'); %ones
-%     else,         scatter(x(n,1),x(n,2),'g+'); %five
-%     end
-% end
-% xlabel('Intensity'); ylabel('Symmetry');
-% hold off
+figure(1);
+hold on
+title('Ones versus Other Digits');
+scatter(x((y==1),1),x((y==2),2),'ro');
+scatter(x((y~=1),1),x((y~=2),2),'g+');
+legend('Ones','Not Ones');xlabel('Intensity'); ylabel('Symmetry');
+hold off
 
 %%=================Linear Regularization=================%%
 
@@ -52,29 +49,12 @@ for i=1:6   %Increment through lambda for testing
         ioTrial=[ones(4500,1),ioTrial];
         yTrial=sign(ioTrial'.*w)';
         %yTrial=sign(xTrial'.*w)';
+
+        %Set all non-ones to -1
         yTrue=y(ptr,:);
-        for f=1:size(yTrue)
-            if (yTrue(f)~=1), yTrue(f)=-1; %1=1, 5=-1
-            end
-        end
+        yTrue(find(yTrue~=1))=-1;
         
-%         % Calculate Error In
-%         E_in(i,j)=nnz(yTrial(:,1)-yTrue(1:4500,1)); % Records Errin for each 'bucket'
-%         
-%         % Calculate Error out, last decile of  data set
-%         selxnIn=ptr([4501:end]);
-%         xTrialOut=zeros(500,3); xTrialOut(:,1)=1;
-%         xTrialOut(:,2:3)=x(selxnIn,:);
-%         yTrialOut=sign(xTrialOut'.*w)';
-%         
-%         Eout(i,j)=nnz(yTrialOut(:,1)-yTrue(4501:5000,1));
-%         
-%         %---------------Reorders Data block for next iteration in trial
-%         xgroup=ptr(1:500,:);            % Selected first 500 to copy
-%         ptr(1:4500,:)=ptr(501:5000,:); % Shifts 501:5000 elements down to first
-%         ptr(4501:5000,:)=xgroup;        % Pastes copied group to end
-        
-                % Calculate Error In
+        % Calculate Error In
         E_in(i,j)=nnz(yTrial(:,1)-yTrue(1:4500,1)); % Records Errin for each 'bucket'
         
         % Calculate Error out, last decile of  data set
@@ -96,7 +76,6 @@ for i=1:6   %Increment through lambda for testing
     
     wt_Avg(i*wSize(1)-wSize(1)+1:i*wSize(1),1)=...
         mean(wt_Avg(i*wSize(1)-wSize(1)+1:i*wSize(1),1:10),1);
-    %wt_Avg(i:i+wSize(1)-1,2:end)=zeros(i+wSize(1)-1,9);
 end
 
 Lambda = {'0.001','0.01','0.1','0.25','0.5','0.75'};
@@ -104,8 +83,7 @@ AvgErrIn = [mean(E_in(1,:)),mean(E_in(2,:)),mean(E_in(3,:)),...
     mean(E_in(4,:)),mean(E_in(5,:)),mean(E_in(6,:))]
 AvgErrOt = [mean(Eout(1,:)),mean(Eout(2,:)),mean(Eout(3,:)),...
     mean(Eout(4,:)),mean(Eout(5,:)),mean(Eout(6,:))]
-% T=table(Lambda,AvgErrIn,AvgErrOt);
-% disp(T);
+
 
 bestLamb=lambda(find(min(AvgErrIn)));
 indBestL=find(lambda==bestLamb);
